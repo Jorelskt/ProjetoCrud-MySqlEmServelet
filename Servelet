@@ -1,0 +1,373 @@
+DeleteServelet.java
+
+import java.io.IOException;  
+import javax.servlet.ServletException;  
+import javax.servlet.annotation.WebServlet;  
+import javax.servlet.http.HttpServlet;  
+import javax.servlet.http.HttpServletRequest;  
+import javax.servlet.http.HttpServletResponse;  
+@WebServlet("/DeleteServlet")  
+public class DeleteServlet extends HttpServlet {  
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)   
+             throws ServletException, IOException {  
+        String sid=request.getParameter("id");  
+        int id=Integer.parseInt(sid);  
+        EmpDao.delete(id);  
+        response.sendRedirect("ViewServlet");  
+    }  
+}  
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EditServelet.java
+
+import java.io.IOException;  
+import java.io.PrintWriter;  
+  
+import javax.servlet.ServletException;  
+import javax.servlet.annotation.WebServlet;  
+import javax.servlet.http.HttpServlet;  
+import javax.servlet.http.HttpServletRequest;  
+import javax.servlet.http.HttpServletResponse;  
+@WebServlet("/EditServlet")  
+public class EditServlet extends HttpServlet {  
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)   
+           throws ServletException, IOException {  
+        response.setContentType("text/html");  
+        PrintWriter out=response.getWriter();  
+        out.println("<h1>Atualização de Cadastro</h1>");  
+        String sid=request.getParameter("id");  
+        int id=Integer.parseInt(sid);  
+          
+        Emp e=EmpDao.getEmployeeById(id);  
+          
+        out.print("<form action='EditServlet2' method='post'>");  
+        out.print("<table>");  
+        out.print("<tr><td></td><td><input type='hidden' name='id' value='"+e.getId()+"'/></td></tr>");  
+        out.print("<tr><td>Nome:</td><td><input type='text' name='name' value='"+e.getName()+"'/></td></tr>");  
+        out.print("<tr><td>Senha:</td><td><input type='password' name='password' value='"+e.getPassword()+"'/>  </td></tr>");  
+        out.print("<tr><td>Email:</td><td><input type='email' name='email' value='"+e.getEmail()+"'/></td></tr>");  
+        out.print("<tr><td>Cidade:</td><td>");  
+        out.print("<select name='country' style='width:150px'>");  
+        out.print("<option>Zona Oeste de SP</option>");  
+        out.print("<option>Zona Norte de SP</option>");  
+        out.print("<option>Centro de SP</option>");  
+        out.print("<option>Zona Leste de SP</option>");  
+        out.print("</select>");  
+        out.print("</td></tr>");  
+        out.print("<tr><td colspan='2'><input type='submit' value='Editar e salvar'/></td></tr>");  
+        out.print("</table>");  
+        out.print("</form>");  
+          
+        out.close();  
+    }  
+}  
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EditServelet2.java
+
+import java.io.IOException;  
+import java.io.PrintWriter;  
+  
+import javax.servlet.ServletException;  
+import javax.servlet.annotation.WebServlet;  
+import javax.servlet.http.HttpServlet;  
+import javax.servlet.http.HttpServletRequest;  
+import javax.servlet.http.HttpServletResponse;  
+@WebServlet("/EditServlet2")  
+public class EditServlet2 extends HttpServlet {  
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)   
+          throws ServletException, IOException {  
+        response.setContentType("text/html");  
+        PrintWriter out=response.getWriter();  
+          
+        String sid=request.getParameter("id");  
+        int id=Integer.parseInt(sid);  
+        String name=request.getParameter("name");  
+        String password=request.getParameter("password");  
+        String email=request.getParameter("email");  
+        String country=request.getParameter("country");  
+          
+        Emp e=new Emp();  
+        e.setId(id);  
+        e.setName(name);  
+        e.setPassword(password);  
+        e.setEmail(email);  
+        e.setCountry(country);  
+          
+        int status=EmpDao.update(e);  
+        if(status>0){  
+            response.sendRedirect("ViewServlet");  
+        }else{  
+            out.println("Desculpe! Não foi possivel");  
+        }  
+          
+        out.close();  
+    }  
+  
+}  
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Emp.java
+
+public class Emp {  
+private int id;  
+private String name,password,email,country;  
+public int getId() {  
+    return id;  
+}  
+public void setId(int id) {  
+    this.id = id;  
+}  
+public String getName() {  
+    return name;  
+}  
+public void setName(String name) {  
+    this.name = name;  
+}  
+public String getPassword() {  
+    return password;  
+}  
+public void setPassword(String password) {  
+    this.password = password;  
+}  
+public String getEmail() {  
+    return email;  
+}  
+public void setEmail(String email) {  
+    this.email = email;  
+}  
+public String getCountry() {  
+    return country;  
+}  
+public void setCountry(String country) {  
+    this.country = country;  
+}  
+  
+}  
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EmpDao.java
+
+import java.util.*;
+import java.sql.*;
+
+public class EmpDao {
+
+	public static Connection getConnection() {
+		Connection con = null;
+		try {
+				Class.forName("com.mysql.jdbc.Driver");
+				con = DriverManager.getConnection("jdbc:mysql://localhost:3307/crud", "root", "");
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+		return con;
+	}
+
+	public static int save(Emp e) {
+		int status = 0;
+		try {
+			Connection con = EmpDao.getConnection();
+			PreparedStatement ps = con
+					.prepareStatement("insert into user905(name,password,email,country) values (?,?,?,?)");
+			ps.setString(1, e.getName());
+			ps.setString(2, e.getPassword());
+			ps.setString(3, e.getEmail());
+			ps.setString(4, e.getCountry());
+
+			status = ps.executeUpdate();
+
+			con.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return status;
+	}
+
+	public static int update(Emp e) {
+		int status = 0;
+		try {
+			Connection con = EmpDao.getConnection();
+			PreparedStatement ps = con
+					.prepareStatement("update user905 set name=?,password=?,email=?,country=? where id=?");
+			ps.setString(1, e.getName());
+			ps.setString(2, e.getPassword());
+			ps.setString(3, e.getEmail());
+			ps.setString(4, e.getCountry());
+			ps.setInt(5, e.getId());
+
+			status = ps.executeUpdate();
+
+			con.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return status;
+	}
+
+	public static int delete(int id) {
+		int status = 0;
+		try {
+			Connection con = EmpDao.getConnection();
+			PreparedStatement ps = con.prepareStatement("delete from user905 where id=?");
+			ps.setInt(1, id);
+			status = ps.executeUpdate();
+
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return status;
+	}
+
+	public static Emp getEmployeeById(int id) {
+		Emp e = new Emp();
+
+		try {
+			Connection con = EmpDao.getConnection();
+			PreparedStatement ps = con.prepareStatement("select * from user905 where id=?");
+			ps.setInt(1, id);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				e.setId(rs.getInt(1));
+				e.setName(rs.getString(2));
+				e.setPassword(rs.getString(3));
+				e.setEmail(rs.getString(4));
+				e.setCountry(rs.getString(5));
+			}
+			con.close();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return e;
+	}
+
+	public static List<Emp> getAllEmployees() {
+		List<Emp> list = new ArrayList<Emp>();
+
+		try {
+			Connection con = EmpDao.getConnection();
+			PreparedStatement ps = con.prepareStatement("select * from user905");
+			ResultSet rs = ps.executeQuery();
+			while (rs.next()) {
+				Emp e = new Emp();
+				e.setId(rs.getInt(1));
+				e.setName(rs.getString(2));
+				e.setPassword(rs.getString(3));
+				e.setEmail(rs.getString(4));
+				e.setCountry(rs.getString(5));
+				list.add(e);
+			}
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return list;
+	}
+}
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+SaveServelet.java
+
+import java.io.IOException;  
+import java.io.PrintWriter;  
+  
+import javax.servlet.ServletException;  
+import javax.servlet.annotation.WebServlet;  
+import javax.servlet.http.HttpServlet;  
+import javax.servlet.http.HttpServletRequest;  
+import javax.servlet.http.HttpServletResponse;  
+@WebServlet("/SaveServlet")  
+public class SaveServlet extends HttpServlet {  
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)   
+         throws ServletException, IOException {  
+        response.setContentType("text/html");  
+        PrintWriter out=response.getWriter();  
+          
+        String name=request.getParameter("name");  
+        String password=request.getParameter("password");  
+        String email=request.getParameter("email");  
+        String country=request.getParameter("country");  
+          
+        Emp e=new Emp();  
+        e.setName(name);  
+        e.setPassword(password);  
+        e.setEmail(email);  
+        e.setCountry(country);  
+          
+        int status=EmpDao.save(e);  
+        if(status>0){  
+            out.print("<p>Empregado salvo com sucesso!</p>");  
+            request.getRequestDispatcher("index.html").include(request, response);  
+        }else{  
+            out.println("Desculpe! Usuario não salvo");  
+        }  
+          
+        out.close();  
+    }  
+  
+}  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ViewServelet.java
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/ViewServlet")
+public class ViewServlet extends HttpServlet {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		response.setContentType("text/html");
+		PrintWriter out = response.getWriter();
+		out.println("<a href='index.html'>Adicionar novo empregado</a>");
+		out.println("<h1>Lista de empregados</h1>");
+
+		List<Emp> list = EmpDao.getAllEmployees();
+
+		out.print("<table border='1' width='100%'");
+		out.print(
+				"<tr><th>Id</th><th>Nome</th><th>Senha</th><th>Email</th><th>Cidade</th>   <th>Editar</th><th>Excluir</th></tr>");
+		for (Emp e : list) {
+			out.print("<tr><td>" + e.getId() + "</td><td>" + e.getName() + "</td><td>" + e.getPassword() + "</td> <td>"
+					+ e.getEmail() + "</td><td>" + e.getCountry() + "</td><td><a href='EditServlet?id=" + e.getId()
+					+ "'>Editar</a></td>   <td><a href='DeleteServlet?id=" + e.getId() + "'>Excluir</a></td></tr>");
+		}
+		out.print("</table>");
+
+		out.close();
+	}
+}
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
